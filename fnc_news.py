@@ -16,15 +16,12 @@ def get_news_info(url:str):
         # 기자x : "span.txt_info" → [0]기자  해결해야할 문제!
         writer_list = doc.select("span.text_info")
         
-        if len(writer_list) < 2:
-                writer = ""
-        else:
-                writer=writer_list[0].get_text()
-                    
-    writer = doc.select("span.text_info")[0].get_text()
+    if len(writer_list) < 2:
+        writer = ""
+    else:
+        writer=writer_list[0].get_text()
     reg_date = doc.select("span.num_date")[0].get_text()
     list_date = reg_date.split(".")
-    list_date = list(map(lambda x: x.strip(), list_date))
     reg_date = list_date[0] + list_date[1] + list_date[2]
     print(f"뉴스 제목: {title}")
     print(f"뉴스 기자: {writer}")
