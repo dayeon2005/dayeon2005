@@ -6,11 +6,12 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import time
+import pandas as pd
 
 
 options = Options()
-options.add_experimental_option("detach", True)  
-# options.add_argument("headless")  
+# options.add_experimental_option("detach", True)  
+options.add_argument("headless")  # 웹브라우(백그라운드)
 options.add_argument("disable-blink-features=AutomationControlled")
 options.add_experimental_option("useAutomationExtension", False)
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
@@ -26,6 +27,7 @@ def collect_news():
 
     url_list = [] # 수집이 완료된 Link(URL)을 저장
     flag = False
+    news_list = [] # 
     while True:
         # 9건의 기사 수집
         doc = BeautifulSoup(driver.page_source, "html.parser")
@@ -36,9 +38,10 @@ def collect_news():
                 flag = True
                 break
             print(f"{count} ===============================================")
-            get_news_info(link["href"])
+            news = get_news_info(link["href"])
+            news_list.append(news)  # 수집한 데이터 로컬 저장
             count += 1
-            url_list.append(link) # 중복수집 방지를 위한 처리
+            url_list.append(link)  # 중복수집 방지를 위한 처리
         if flag:
             break
         
@@ -46,6 +49,17 @@ def collect_news():
         # [새로운 뉴스] 버튼 클릭 이벤트
         driver.find_element(By.XPATH, '//*[@id="58d84141-b8dd-413c-9500-447b39ec29b9"]/div[2]/a').click()
         time.sleep(1)
+    
+    # 수집한 데이터 27건 main으로 전달
+    #  1. DB활용
+    #   - DB(27건 저장) → SELECT 가져와서 전달
+    #  2. 수집시 수집데이터를 따로 저장 후 전달
+    #   - 
+    # news_list → [{news1}, {news2}, {news3}, {news4}, ..., {news27}]
+    # "pandas"의 DataFrame(표) Type으로 news_list 변환
+    col_name = ["title", "writer", "content", "regdate"]
+    df_news = pd.DataFrame(news_list, columns=col_name)  # DataFrame(표) 변환
+    return df_news, count
 
 def get_news_info(url: str):
     result = requests.get(url)
@@ -75,6 +89,4 @@ def get_news_info(url: str):
         "regdate": reg_date,
     }
     insert_news(data)
-
-    
-collect_news()
+    return data
